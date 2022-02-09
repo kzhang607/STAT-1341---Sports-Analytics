@@ -1,6 +1,5 @@
 ---
 title: 'STAT 1341 Midterm Project: COVID-19 and the NBA'
-author: "Chris Park and Kevin Zhang"
 output:
   html_document:
     df_print: paged
