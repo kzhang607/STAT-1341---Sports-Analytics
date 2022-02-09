@@ -1,0 +1,221 @@
+---
+title: 'STAT 1341 Midterm Project: COVID-19 and the NBA'
+author: "Chris Park and Kevin Zhang"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Data Cleaning
+
+```{r}
+library(readxl)
+
+# 2019-2020 NBA Player Stats
+rs_player_19_20 = read_excel('2019-2020 NBA Player Stats Regular Season.xlsx')
+
+# 2020-2021 NBA Player Stats
+rs_player_20_21 = read_excel('2020-2021 NBA Player Stats Regular Season.xlsx')
+
+# 2018-2019 NBA Team Stats
+team_18_19 = read_excel('2018-2019 NBA Team Stats.xls')
+
+# 2019-2020 NBA Team Stats
+team_19_20 = read_excel('2019-2020 NBA Team Stats.xls')
+
+# 2020-2021 NBA Team Stats
+team_20_21 = read_excel('2020-2021 NBA Team Stats.xls')
+
+# Dropping unwanted columns in player stats datasets
+rs_player_19_20 = subset(rs_player_19_20, select = -c(RANK,POS,AGE,MPG,MIN_percentage,FTA,two_PA,twoP_percentage,three_PA,threeP_percentage,TRB_percentage,AST_percentage))
+
+rs_player_20_21 = subset(rs_player_20_21, select = -c(RANK,POS,AGE,MPG,MIN_percentage,FTA,two_PA,twoP_percentage,three_PA,threeP_percentage,TRB_percentage,AST_percentage))
+
+# Dropping unwanted columns in team stats datasets 
+team_18_19 = subset(team_18_19, select = -c(Rk,Age,PW,PL,MOV,SOS,SRS,NRtg,FTr,three_PAr,18,23,eFG_per,TOV_per,DRB_per,FT_FGA_d,28,Arena,Attend.))
+team_19_20 = subset(team_19_20, select = -c(Rk,Age,PW,PL,MOV,SOS,SRS,NRtg,FTr,three_PAr,18,23,eFG_per,TOV_per,DRB_per,FT_FGA_d,28,Arena,Attend.))
+team_20_21 = subset(team_20_21, select = -c(Rk,Age,PW,PL,MOV,SOS,SRS,NRtg,FTr,three_PAr,18,23,eFG_per,TOV_per,DRB_per,FT_FGA_d,28,Arena,Attend.))
+
+# Dropping league average row in team stats datasets
+team_18_19 = team_18_19[-c(31),]
+team_19_20 = team_19_20[-c(31),]
+team_20_21 = team_20_21[-c(31),]
+
+# Changing row with NA to 0 for attendance
+team_20_21[is.na(team_20_21)] = 0
+
+# Dropping rows that have NA
+rs_player_19_20 = na.omit(rs_player_19_20)
+rs_player_20_21 = na.omit(rs_player_20_21)
+
+# Removing duplicates: if the player was on two teams, the team that the player had more games played is kept
+rs_player_19_20 = rs_player_19_20[!duplicated(rs_player_19_20$`FULL NAME`),]
+rs_player_20_21 = rs_player_20_21[!duplicated(rs_player_20_21$`FULL NAME`),]
+
+# Removing players that did not play in both seasons
+rs_player_19_20 = subset(rs_player_19_20, rs_player_19_20$`FULL NAME` %in% rs_player_20_21$`FULL NAME`)
+rs_player_20_21 = subset(rs_player_20_21, rs_player_20_21$`FULL NAME` %in% rs_player_19_20$`FULL NAME`)
+```
+
+# Descriptive Statistics
+
+## Comparing Player Statistics
+
+### Summary Statistics: consisting of N, Mean, Std. Dev., Min, Pctl.25, Pctl.75, and Max
+```{r}
+library(vtable)
+st(rs_player_19_20)
+st(rs_player_20_21)
+```
+
+### Plotting and Correlations: Checking for any noteworthy relationships
+```{r}
+# Turnover Percentage
+plot(rs_player_19_20$TO_percentage, rs_player_20_21$TO_percentage, xlab="19-20 TO%", ylab="20-21 TO%")
+cor(rs_player_19_20$TO_percentage, rs_player_20_21$TO_percentage)
+
+# Free Throw Percentage
+plot(rs_player_19_20$FT_percentage, rs_player_20_21$FT_percentage, xlab="19-20 FT%", ylab="20-21 FT%")
+cor(rs_player_19_20$FT_percentage, rs_player_20_21$FT_percentage)
+
+# Effective Field Goal Percentage
+plot(rs_player_19_20$eFG_percentage, rs_player_20_21$eFG_percentage, xlab="19-20 eFG%", ylab="20-21 eFG%")
+cor(rs_player_19_20$eFG_percentage, rs_player_20_21$eFG_percentage)
+
+# True Shooting Percentage
+plot(rs_player_19_20$TS_percentage, rs_player_20_21$TS_percentage, xlab="19-20 TS%", ylab="20-21 TS%")
+cor(rs_player_19_20$TS_percentage, rs_player_20_21$TS_percentage)
+
+# Points Per Game
+plot(rs_player_19_20$PPG, rs_player_20_21$PPG, xlab="19-20 PPG", ylab="20-21 PPG")
+cor(rs_player_19_20$PPG, rs_player_20_21$PPG)
+
+# Rebounds Per Game
+plot(rs_player_19_20$RPG, rs_player_20_21$RPG, xlab="19-20 RPG", ylab="20-21 RPG")
+cor(rs_player_19_20$RPG, rs_player_20_21$RPG)
+
+# Assists Per Game
+plot(rs_player_19_20$APG, rs_player_20_21$APG, xlab="19-20 APG", ylab="20-21 APG")
+cor(rs_player_19_20$APG, rs_player_20_21$APG)
+
+# Steals Per Game
+plot(rs_player_19_20$SPG, rs_player_20_21$SPG, xlab="19-20 SPG", ylab="20-21 SPG")
+cor(rs_player_19_20$SPG, rs_player_20_21$SPG)
+
+# Blocks Per Game
+plot(rs_player_19_20$BPG, rs_player_20_21$BPG, xlab="19-20 BPG", ylab="20-21 BPG")
+cor(rs_player_19_20$BPG, rs_player_20_21$BPG)
+
+# Turnovers Per Game
+plot(rs_player_19_20$TOPG, rs_player_20_21$TOPG, xlab="19-20 TOPG", ylab="20-21 TOPG")
+cor(rs_player_19_20$TOPG, rs_player_20_21$TOPG)
+
+# ViVersatility Index
+plot(rs_player_19_20$VIVersatility, rs_player_20_21$VIVersatility, xlab="19-20 VIV", ylab="20-21 VIV")
+cor(rs_player_19_20$VIVersatility, rs_player_20_21$VIVersatility)
+
+# Offensive Rating
+plot(rs_player_19_20$ORTG, rs_player_20_21$ORTG, xlab="19-20 ORTG", ylab="20-21 ORTG")
+cor(rs_player_19_20$ORTG, rs_player_20_21$ORTG)
+
+# Defensive Rating
+plot(rs_player_19_20$DRTG, rs_player_20_21$DRTG, xlab="19-20 DRTG", ylab="20-21 DRTG")
+cor(rs_player_19_20$DRTG, rs_player_20_21$DRTG)
+```
+
+## Comparing Team Statistics
+
+### Summary Statistics: consisting of N, Mean, Std. Dev., Min, Pctl.25, Pctl.75, and Max
+```{r}
+library(vtable)
+st(team_19_20)
+st(team_20_21)
+```
+
+### Plotting, Correlations, Histograms: Checking for any noteworthy relationships
+```{r}
+# Wins
+plot(team_19_20$W, team_20_21$W, xlab="19-20 Wins", ylab="20-21 Wins")
+cor(team_19_20$W, team_20_21$W)
+hist(team_19_20$W)
+hist(team_20_21$W)
+
+# Losses
+plot(team_19_20$L, team_20_21$L, xlab="19-20 Losses", ylab="20-21 Losses")
+cor(team_19_20$L, team_20_21$L)
+hist(team_19_20$L)
+hist(team_20_21$L)
+
+# Offensive Rating
+plot(team_19_20$ORtg, team_20_21$ORtg, xlab="19-20 ORTG", ylab="20-21 ORTG")
+cor(team_19_20$ORtg, team_20_21$ORtg)
+hist(team_19_20$ORtg)
+hist(team_20_21$ORtg)
+
+# Defensive Rating
+plot(team_19_20$DRtg, team_20_21$DRtg, xlab="19-20 DRTG", ylab="20-21 DRTG")
+cor(team_19_20$DRtg, team_20_21$DRtg)
+hist(team_19_20$DRtg)
+hist(team_20_21$DRtg)
+
+# Pace
+plot(team_19_20$Pace, team_20_21$Pace, xlab="19-20 Pace", ylab="20-21 Pace")
+cor(team_19_20$Pace, team_20_21$Pace)
+hist(team_19_20$Pace)
+hist(team_20_21$Pace)
+
+# True Shooting Percentage
+plot(team_19_20$TS_percentage, team_20_21$TS_percentage, xlab="19-20 TS%", ylab="20-21 TS%")
+cor(team_19_20$TS_percentage, team_20_21$TS_percentage)
+hist(team_19_20$TS_percentage)
+hist(team_20_21$TS_percentage)
+
+# Effective Field Goal Percentage
+plot(team_19_20$eFG_percentage, team_20_21$eFG_percentage, xlab="19-20 eFG%", ylab="20-21 eFG%")
+cor(team_19_20$eFG_percentage, team_20_21$eFG_percentage)
+hist(team_19_20$eFG_percentage)
+hist(team_20_21$eFG_percentage)
+
+# Turnover Percentage
+plot(team_19_20$TOV_percentage, team_20_21$TOV_percentage, xlab="19-20 TOV%", ylab="20-21 TOV%")
+cor(team_19_20$TOV_percentage, team_20_21$TOV_percentage)
+hist(team_19_20$TOV_percentage)
+hist(team_20_21$TOV_percentage)
+
+# Offensive Rebound Percentage
+plot(team_19_20$ORB_percentage, team_20_21$ORB_percentage, xlab="19-20 ORB%", ylab="20-21 ORB%")
+cor(team_19_20$ORB_percentage, team_20_21$ORB_percentage)
+hist(team_19_20$ORB_percentage)
+hist(team_20_21$ORB_percentage)
+
+# Free Throws/Field Goal Attempts
+plot(team_19_20$FT_FGA, team_20_21$FT_FGA, xlab="19-20 FT/FGA", ylab="20-21 FT/FGA")
+cor(team_19_20$FT_FGA, team_20_21$FT_FGA)
+hist(team_19_20$FT_FGA)
+hist(team_20_21$FT_FGA)
+
+# Attendance Per Game
+plot(team_19_20$Attend._G, team_20_21$Attend._G, xlab="19-20 Attendance/G", ylab="20-21 Attendance/G")
+cor(team_19_20$Attend._G, team_20_21$Attend._G)
+hist(team_19_20$Attend._G)
+hist(team_20_21$Attend._G)
+```
+
+# Inferential Statistics
+
+## Multiple Linear Regression Models
+```{r}
+# 2018-2019 Team Stats Model
+model1 = lm(W ~ ORtg + DRtg + Pace + TS_percentage + eFG_percentage + TOV_percentage + ORB_percentage + FT_FGA, data = team_18_19)
+summary(model1)
+
+# 2019-2020 Team Stats Model
+model2 = lm(W ~ ORtg + DRtg + Pace + TS_percentage + eFG_percentage + TOV_percentage + ORB_percentage + FT_FGA, data = team_19_20)
+summary(model2)
+
+# 2020-2021 Team Stats Model
+model3 = lm(W ~ ORtg + DRtg + Pace + TS_percentage + eFG_percentage + TOV_percentage + ORB_percentage + FT_FGA, data = team_20_21)
+summary(model3)
+```
+
+
